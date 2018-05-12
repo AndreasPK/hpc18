@@ -179,10 +179,10 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 	}
 	printf("num of threads = %d\n", num_omp_threads);
             
-#pragma omp parallel
-{
-	LIKWID_MARKER_START("kmeans_kernel");
-}
+//#pragma omp parallel
+//{
+//	LIKWID_MARKER_START("kmeans_kernel");
+//}
     do {
         delta = 0.0;
 		omp_set_num_threads(num_omp_threads);
@@ -190,6 +190,7 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
                 shared(feature,clusters,membership,partial_new_centers,partial_new_centers_len)
         {
             int tid = omp_get_thread_num();				
+	    LIKWID_MARKER_START("kmeans_kernel");
             #pragma omp for \
                         private(i,j,index) \
                         firstprivate(npoints,nclusters,nfeatures) \
@@ -213,8 +214,13 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 	        for (j=0; j<nfeatures; j++)
 		       partial_new_centers[tid][index][j] += feature[i][j];
             }
+	LIKWID_MARKER_STOP("kmeans_kernel");
         } /* end of #pragma omp parallel */
 
+//#pragma omp parallel
+//{
+//	LIKWID_MARKER_STOP("kmeans_kernel");
+//}
         /* let the main thread perform the array reduction */
         for (i=0; i<nclusters; i++) {
             for (j=0; j<nthreads; j++) {
@@ -239,10 +245,6 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
         
     } while (delta > threshold && loop++ < 500);
 
-#pragma omp parallel
-{
-	LIKWID_MARKER_STOP("kmeans_kernel");
-}
     
     free(new_centers[0]);
     free(new_centers);

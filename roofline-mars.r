@@ -29,7 +29,7 @@ bw_t10_a    = c(73.4359,  476.2558,  734.1712, 1061.9937)
 
 for (i in 1:4) {
   ai = flops_t10_a[i] / bw_t10_a[i]
-  points(ai, flops_t10_a[i]/1000, col="powderblue", pch = 15)
+  points(ai, flops_t10_a[i]/1000, col="powderblue", pch = 15, cex = 1.5)
 }
 
 # 10 threads - all
@@ -39,7 +39,7 @@ bw_t80_a    = c(78.4760, 981.6600, 1244,3416, 1420,3577)
 
 for (i in 1:4) {
   ai = flops_t80_a[i] / bw_t80_a[i]
-  points(ai, flops_t80_a[i]/1000, col="blue", pch = 16)
+  points(ai, flops_t80_a[i]/1000, col="blue", pch = 16, cex = 1.5)
 }
 
 
@@ -50,7 +50,7 @@ bw_t10_m =     c(150.0137,  2248.9188,  3500.4505,  3451.1885)
 
 for (i in 1:4) {
   ai = flops_t10_m[i] / bw_t10_m[i]
-  points(ai, flops_t10_m[i]/1000, col="orange", pch = 17)
+  points(ai, flops_t10_m[i]/1000, col="orange", pch = 17, cex = 1.5)
 }
 
 # 80 threads - marked 
@@ -60,7 +60,7 @@ bw_t80_m    = c(1292.0169, 2807.5566, 3312.4733, 3230.9055)
 
 for (i in 1:4) {
   ai = flops_t80_m[i] / bw_t80_m[i]
-  points(ai, flops_t80_m[i]/1000, col="green", pch = 18)
+  points(ai, flops_t80_m[i]/1000, col="green", pch = 18, cex = 1.5)
 }
 
 segments(x_at[1], pp, x_at[length(x_at)], pp, col = "red", lwd = 2, lty = "dashed")

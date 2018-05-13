@@ -1,4 +1,4 @@
-png("roofline-mars-marked.png", width = 1280, height = 640)
+png("roofline-mars-80tmarked.png", width = 1280, height = 640)
 
 pp = 1280.0  # peak performance ... [GFLOPS/s]
 pb =   30.5 # peak bandwidth ... [GB/s]
@@ -16,7 +16,7 @@ plot(ai, xlab = "Arithmetic Intensity [FLOPS/B]",
          xlim = c(x_at[1], x_at[length(x_at)]),
          ylab = "Performance [GFLOPS/s]", 
          ylim = c(y_at[1], y_at[length(y_at)]),
-     axes=FALSE, log = "xy", type = "l", col = "red", lwd = 2, lty = "dashed")
+     axes=FALSE, log = "xy", type = "l", col = "red", lwd = 2)
 
 axis(1, at = x_at, labels = x_labels, tick = TRUE)
 axis(2, at = y_at, labels = y_labels, tick = TRUE)
@@ -45,13 +45,13 @@ axis(2, at = y_at, labels = y_labels, tick = TRUE)
 
 # 10 threads - marked 
 #                     100      204800      819200         kdd
-flops_t10_m =  c(385.0818, 12738.9347, 12814.5174, 12995.5919)
-bw_t10_m =     c(150.0137,  2248.9188,  3500.4505,  3451.1885)
-
-for (i in 1:4) {
-  ai = flops_t10_m[i] / bw_t10_m[i]
-  points(ai, flops_t10_m[i]/1000, col="orange", pch = 17, cex = 1.5)
-}
+#flops_t10_m =  c(385.0818, 12738.9347, 12814.5174, 12995.5919)
+#bw_t10_m =     c(150.0137,  2248.9188,  3500.4505,  3451.1885)
+#
+#for (i in 1:4) {
+#  ai = flops_t10_m[i] / bw_t10_m[i]
+#  points(ai, flops_t10_m[i]/1000, col="orange", pch = 17, cex = 1.5)
+#}
 
 # 80 threads - marked 
 #                     100     204800     819200        kdd
@@ -63,7 +63,19 @@ for (i in 1:4) {
   points(ai, flops_t80_m[i]/1000, col="green", pch = 18, cex = 1.5)
 }
 
-segments(x_at[1], pp, x_at[length(x_at)], pp, col = "red", lwd = 2, lty = "dashed")
+# add/mul imbalance
+segments(x_at[1], pp*0.75, x_at[length(x_at)], pp*0.75,
+         col = "red", lwd = 1, lty = "dashed")
+text(0.5, 700, "add/mul imbalance", cex = 1.5)
+
+# simd
+segments(x_at[1], pp*0.75*0.25, x_at[length(x_at)], pp*0.75*0.25,
+         col = "red", lwd = 1, lty = "dashed")
+text(0.5, 170, "no SIMD", cex = 1.5)
+
+
+segments(x_at[1], pp, x_at[length(x_at)], pp,
+         col = "red", lwd = 2)
 
 text(2, 128, "bandwidth bound", srt = 13, cex = 1.5)
 text(2, 1800, "compute bound", cex = 1.5)
@@ -76,8 +88,8 @@ text(2, 1800, "compute bound", cex = 1.5)
 
 legend("right",
        cex = 1.5,
-       pch    = c(17, 18),
-       col    = c("orange", "green"),
-       legend = c("10 threads - marked", "80 threads - marked"))
+       pch    = c(18),
+       col    = c("green"),
+       legend = c("80 threads - marked"))
 
 dev.off()

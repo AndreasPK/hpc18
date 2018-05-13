@@ -96,7 +96,7 @@ If we stop here our Arithmethic Intensity is 3 FP operations per 8 byte. Giving 
 
 
 \subsubsection{Main Loop:Updating cluster information.}
-\begin{lstlisting}[caption={Updating (partial) cluster information}]
+\begin{lstlisting}[caption={Updating (partial) cluster information},label=lblUpdPartClst]
 for (j=0; j<nfeatures; j++)
 	partial_new_centers[tid][index][j] += feature[i][j];
 \end{lstlisting}
@@ -185,31 +185,19 @@ When considering the maximum performance of the given code there are multiple th
 	\item The kernel is not balanced. There is actually only a single relevant multiplication in the inner loop! Which can happen in parallel to the additions.
 \end{itemize}
 
-This means performance is limited by the addition ALU only. So peak performance for the given code is cut by a factor of 8.
+This means performance is limited by the addition ALU primarily.
 
-AI when only considering additions is given by \ref{tab:AIadd}.
-Maximum FP performance under these considerations is $$\frac{1280GFlops}{4 \text{(no SIMD)}  * 2 \text{(only addition)} } = 160 GFlops$$.
+The kernel in find\_nearest\_point is able to execute 1,5 Instructions per cycle instead of the maximum of 2.
+We could take into account the limiting factor in the smaller loop \autoref{lblUpdPartClst} which is limited purely by addition.
+However this would bring down flops/cycle only slightly to 1,41 so for simplicity we will use 1.5 for further analysis.
+
+Maximum FP performance under these considerations is:
+$$1280 GFlops * 0.25 \text{(no SIMD)}  * 0.75 \text{(imbalance)} = 240 GFlops$$.
 
 Which gives us for the demand on the memory subsystem for 80 Threads:
-$$\frac{160 GFlops}{0,21 Flop/Byte} = 762Gb/s$$
+$$\frac{240 GFlops}{0,31 Flop/Byte} = 774 GB/s$$
 
-However since many of the inputs to the kernel can be cached this is not representative from the actualy demands as our measurements show.
-
-
-\begin{table}[ht]
-	\centering
-	\caption{Arithmethic Intensity - only addition}
-	\label{tab:AIadd}
-	\begin{tabular}{|r|r|r|r|}
-		\hline
-		& Find nearest Cluster & Update cluster information & Total \\ \hline
-		Iterations           & $n * 170$            & $n*34$                     & -     \\ \hline
-		Memory (Byte)              & $8*170$              & $12*34$                      & 1768  \\ \hline
-		Operations (Flop)          & $2*170$              & $1*34$                       & 374   \\ \hline
-		Arithmetic Intensity (Flop/Byte) & 0,25           & 0,08                         & 0,21  \\ \hline
-	\end{tabular}
-\end{table}
-
+However since many of the inputs to the kernel can be cached this is not representative of the actualy demands on the memory system as our measurements show.
 
 
 

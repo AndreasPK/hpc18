@@ -1,6 +1,6 @@
 png("roofline-mars-10tall.png", width = 1280, height = 640)
 
-pp = 1280.0  # peak performance ... [GFLOPS/s]
+pp = 160.0  # peak performance ... [GFLOPS/s]
 pb =   30.5 # peak bandwidth ... [GB/s]
 ai = function(b) (pp/pb) * b
 
@@ -8,7 +8,7 @@ x = seq(-2,5,1)
 x_at = 2^x
 x_labels = x_at
 
-y = seq(-2,11,1)
+y = seq(-2,8,1)
 y_at = 2^y
 y_labels = y_at
 
@@ -66,19 +66,19 @@ for (i in 1:4) {
 # add/mul imbalance
 segments(x_at[1], pp*0.75, x_at[length(x_at)], pp*0.75,
          col = "red", lwd = 1, lty = "dashed")
-text(0.5, 700, "add/mul imbalance", cex = 1.5)
+text(0.5, 100, "add/mul imbalance", cex = 1.5)
 
 # simd
 segments(x_at[1], pp*0.75*0.25, x_at[length(x_at)], pp*0.75*0.25,
          col = "red", lwd = 1, lty = "dashed")
-text(0.5, 170, "no SIMD", cex = 1.5)
+text(0.5, 25, "no SIMD", cex = 1.5)
 
 
 segments(x_at[1], pp, x_at[length(x_at)], pp,
          col = "red", lwd = 2)
 
-text(2, 128, "bandwidth bound", srt = 13, cex = 1.5)
-text(2, 1800, "compute bound", cex = 1.5)
+text(2, 14, "bandwidth bound", srt = 15, cex = 1.5)
+text(2, 200, "compute bound", cex = 1.5)
 
 #legend("right",
 #       pch    = c(15, 16, 17, 18),

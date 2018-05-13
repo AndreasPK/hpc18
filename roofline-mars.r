@@ -1,65 +1,71 @@
-png("roofline-mars.png", width = 640, height = 640)
+png("roofline-mars.png", width = 1280, height = 640)
 
 pp = 640  # peak performance ... [GFLOPS/s]
 pb = 30.5 # peak bandwidth ... [GB/s]
 ai = function(b) (pp/pb) * b
 
-x = seq(-1,5,1)
+x = seq(-2,5,1)
 x_at = 2^x
 x_labels = x_at
 
-y = seq(-1,10,1)
+y = seq(-2,10,1)
 y_at = 2^y
 y_labels = y_at
 
-plot(ai, xlab = "Arithmetic Intensity [GFLOPS/B]",
+plot(ai, xlab = "Arithmetic Intensity [FLOPS/B]",
          xlim = c(x_at[1], x_at[length(x_at)]),
          ylab = "Performance [FLOPS/s]", 
          ylim = c(y_at[1], y_at[length(y_at)]),
-     axes=FALSE, log = "xy", type = "l")
+     axes=FALSE, log = "xy", type = "l", col = "red", lwd = 2, lty = "dashed")
 
 axis(1, at = x_at, labels = x_labels, tick = TRUE)
 axis(2, at = y_at, labels = y_labels, tick = TRUE)
 
-# 100 - 204800 - 819200 - kdd
-a_mflops_t10 = c(1.3351, 1496.7568, 2192.4793, 3451.9511)
-a_bw_t10 =    c(70.9230,  476.6643,  737.9183, 1078.4417)
+
+# 10 threads - all
+#                   100     204800     819200        kdd
+flops_t10_a = c( 1.3292, 1517.9227, 2225.7196, 3427.6304)
+bw_t10_a    = c(73.4359,  476.2558,  734.1712, 1061.9937)
 
 for (i in 1:4) {
-  ai = a_mflops_t10[i] / a_bw_t10[i]
-  points(ai, a_mflops_t10[i]/1000, type = "p", col="red")
+  ai = flops_t10_a[i] / bw_t10_a[i]
+  points(ai, flops_t10_a[i]/1000, col="powderblue", pch = 15)
+}
+
+# 10 threads - all
+#                   100    204800     819200        kdd
+flops_t80_a = c( 0.5820, 731.8209, 1164.4394, 1519.8610)
+bw_t80_a    = c(78.4760, 981.6600, 1244,3416, 1420,3577)
+
+for (i in 1:4) {
+  ai = flops_t80_a[i] / bw_t80_a[i]
+  points(ai, flops_t80_a[i]/1000, col="blue", pch = 16)
 }
 
 
-# 100 - 204800 - 819200 - kdd
-a_mflops_t80 = c(0.6238, 738.1421, 1206.7615, 1705.8327)
-a_bw_t80 =    c(92.5221, 739.4261, 1142.4497, 1297.8327)
+# 10 threads - marked 
+#                     100      204800      819200         kdd
+flops_t10_m =  c(385.0818, 12738.9347, 12814.5174, 12995.5919)
+bw_t10_m =     c(150.0137,  2248.9188,  3500.4505,  3451.1885)
 
 for (i in 1:4) {
-  ai = a_mflops_t80[i] / a_bw_t80[i]
-  points(ai, a_mflops_t80[i]/1000, type = "p", col="blue")
+  ai = flops_t10_m[i] / bw_t10_m[i]
+  points(ai, flops_t10_m[i]/1000, col="orange", pch = 17)
 }
 
-
-# 100 - 204800 - 819200 - kdd
-m_mflops_t10 = c(305.0021, 12571.3622, 13104.9845, 13671.4622)
-m_bw_t10     = c(114.5279, 2242.6928,  3561.8832,  3568.4435)
+# 80 threads - marked 
+#                     100     204800     819200        kdd
+flops_t80_m = c(   7.4574, 4017.8371, 6579.4072, 5940.1009)
+bw_t80_m    = c(1292.0169, 2807.5566, 3312.4733, 3230.9055)
 
 for (i in 1:4) {
-  ai = m_mflops_t10[i] / a_bw_t10[i]
-  points(ai, m_mflops_t10[i]/1000, type = "p", col="green")
+  ai = flops_t80_m[i] / bw_t80_m[i]
+  points(ai, flops_t80_m[i]/1000, col="green", pch = 18)
 }
 
+segments(x_at[1], pp, x_at[length(x_at)], pp, col = "red", lwd = 2, lty = "dashed")
 
-# 100 - 204800 - 819200 - kdd
-m_mflops_t80 =    c(8.2856, 4466.8025, 6653.0316, 6104.6404)
-m_bw_t80 =     c(1174.1465, 2021.0718, 2665.2724, 2612.6359)
-
-for (i in 1:4) {
-  ai = m_mflops_t80[i] / a_bw_t80[i]
-  points(ai, m_mflops_t80[i]/1000, type = "p", col="yellow")
-}
-
-abline(h = pp, type = "l")
+text(2, 64, "bandwidth bound", srt = pi*pp/140, cex = 1.5)
+text(2, 1024, "compute bound", cex = 1.5)
 
 dev.off()

@@ -1,3 +1,8 @@
 make to build the kmeans binary.
 
 make stats to collect stats.
+
+Results:
+results: Marker inside main loop - whole loop
+results2: Marker inside inner loop of main loop
+results3: Marker over main loop

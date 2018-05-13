@@ -1,7 +1,7 @@
 png("task-01_roofline-earth-mars.png", width = 1280, height = 640)
 
 pp_earth =  192.0 # peak performance ... [GFLOPS/s]
-pb_earth =    9.1 # peak bandwidth ... [GB/s]
+pb_earth =    8.1 # peak bandwidth ... [GB/s]
 ai_earth = function(b) (pp_earth/pb_earth) * b
 
 pp_mars  = 1280.0 # peak performance ... [GFLOPS/s]

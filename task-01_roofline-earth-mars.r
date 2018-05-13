@@ -67,6 +67,7 @@ axis(2, at = y_at, labels = y_labels, tick = TRUE)
 #  points(ai, flops_t80_m[i]/1000, col="green", pch = 18, cex = 1.5)
 #}
 
+
 segments(x_at[1], ai_mars(x_at[1]), x_at[length(x_at)], ai_mars(x_at[length(x_at)]),
          col = "red", lwd = 2)
 
@@ -77,7 +78,7 @@ segments(x_at[1], pp_mars, x_at[length(x_at)], pp_mars,
          col = "red", lwd = 2)
 
 text(24, 620, "bandwidth bound: earth", srt = 21, cex = 1.5)
-text(32, 220, "compute bound: earth", cex = 1.5)
+text(24, 220, "compute bound: earth", cex = 1.5)
 text(12, 620, "bandwidth bound: mars", srt = 21, cex = 1.5)
 text(12, 1500, "compute bound: mars", cex = 1.5)
 

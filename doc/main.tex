@@ -12,11 +12,118 @@
 \subsection{Machine 1}
 
 \subsubsection{Theoretical Peak Performance}
+\begin{itemize}
+    \item \texttt{mars}:
+        \begin{itemize}
+            \item Intel Xeon E7-8850 @ 2.00 GHz
+            \item 80 Cores
+        \end{itemize}
+        This processor is equipped with several 128-bit (XMMxx) registers due to SSE2 and a separate floating point adder and multiplier that operate on these registers. Since in each cycle 4 single-precision floating-point numbers can be added and 4 more can be multiplied, each core is capable of 8 single-precision floating-point operations per cycle. \cite{agnerorg}
+        \begin{itemize}
+            \item Theoretical peak performance: \\
+            $1 \, \text{instruction} \cdot 8 \, \text{operations} \cdot 2.00 \, \text{GHz} \cdot 80 \, \text{cores} = \bold{1280.00} \, \textbf{GFLOPS/s}$
+            
+            \item Empirical peak memory bandwidth: $\bold{30.5} \, \textbf{GB/s}$ \\
+        \end{itemize}
+    \item \texttt{earth}:
+        \begin{itemize}
+            \item Intel Core i5 750 @ 2.67 GHz
+            \item 4 Cores
+        \end{itemize}
+        This processor also uses the SSE2 extensio but has only one unit for floating-point addition and multiplication. Therefore, at most 4 floating-point calculations are executed with each cycle.
+        \begin{itemize}
+            \item Theoretical peak performance: \\
+            $1 \, \text{instruction} \cdot 4 \, \text{operations} \cdot 2.67 \, \text{GHz} \cdot 4 \, \text{cores} = \bold{42.72 \, \textbf{GFLOPS/s}}$
+            
+            \item Peak memory bandwidth: $\bold{12.2} \, \textbf{GB/s}$ \\
+        \end{itemize}
+\end{itemize}
 
-\subsubsection{STREAM or NUMA-STREAM}
+
+\subsubsection{NUMA-STREAM}
+\begin{itemize}
+    \item Parameters used to compile \texttt{numa-stream}: \\
+    \texttt{
+        gcc -O3 -std=c99 stream.c -lnuma -fopenmp \textbackslash \\
+        -DN=80000000 -DNTIMES=100 -o stream-gcc
+    }
+    
+    \item Output of \texttt{stream-gcc} on \texttt{earth}: \\
+    \texttt{\tiny 
+------------------------------------------------------------- \\
+STREAM version $Revision: 5.9 $ \\
+------------------------------------------------------------- \\
+This system uses 8 bytes per DOUBLE PRECISION word. \\
+------------------------------------------------------------- \\
+Array size = 80000000 \\
+Total memory required = 1831.1 MB. \\
+Each test is run 100 times, but only \\
+the *best* time for each is used. \\
+------------------------------------------------------------- \\
+Number of Threads requested = 2 \\
+Number of available nodes = 1 \\
+------------------------------------------------------------- \\
+Your clock granularity/precision appears to be 1 microseconds. \\
+Each test below will take on the order of 81670 microseconds. \\
+   (= 81670 clock ticks) \\
+Increase the size of the arrays if this shows that \\
+you are not getting at least 20 clock ticks per test. \\
+------------------------------------------------------------- \\
+WARNING -- The above is only a rough guideline. \\
+For best results, please be sure you know the \\
+precision of your system timer. \\
+------------------------------------------------------------- \\
+Function      Rate (MB/s)   Avg time     Min time     Max time \\
+Copy:       11315.5286       0.1137       0.1131       0.1237 \\
+Scale:      11134.7738       0.1156       0.1150       0.1184 \\
+Add:        12139.7541       0.1589       0.1582       0.1625 \\
+Triad:      12197.3056       0.1581       0.1574       0.1597 \\
+------------------------------------------------------------- \\
+Solution Validates \\
+-------------------------------------------------------------
+    }
+    
+    \newpage
+    
+    \item Output of \texttt{stream-gcc} on \texttt{mars}: \\
+    \texttt{\tiny 
+------------------------------------------------------------- \\
+STREAM version $Revision: 5.9 $ \\
+------------------------------------------------------------- \\
+This system uses 8 bytes per DOUBLE PRECISION word. \\
+------------------------------------------------------------- \\
+Array size = 80000000 \\
+Total memory required = 1831.1 MB. \\
+Each test is run 100 times, but only \\
+the *best* time for each is used. \\
+------------------------------------------------------------- \\
+Number of Threads requested = 80 \\
+Number of available nodes = 8 \\
+------------------------------------------------------------- \\
+Your clock granularity/precision appears to be 1 microseconds. \\
+Each test below will take on the order of 20711 microseconds. \\
+   (= 20711 clock ticks) \\
+Increase the size of the arrays if this shows that \\
+you are not getting at least 20 clock ticks per test. \\
+------------------------------------------------------------- \\
+WARNING -- The above is only a rough guideline. \\
+For best results, please be sure you know the \\
+precision of your system timer. \\
+------------------------------------------------------------- \\
+Function      Rate (MB/s)   Avg time     Min time     Max time \\
+Copy:       30344.0333       0.0429       0.0422       0.0441 \\
+Scale:      30521.8913       0.0424       0.0419       0.0440 \\
+Add:        30126.6472       0.0645       0.0637       0.0656 \\
+Triad:      30260.5691       0.0643       0.0634       0.0660 \\
+------------------------------------------------------------- \\
+Solution Validates \\
+------------------------------------------------------------- \\
+    }
+\end{itemize}
+
 
 \subsubsection{Roofline Plot}
-
+\includegraphics[scale=0.4, angle=90]{roofline-earth-mars-pure.png}
 
 \subsection{Machine 2 / Mars}
 
@@ -111,7 +218,7 @@ Solution Validates
 The kmeans benchmark was compiled with the following flags apply to the executable and all c files:
 
 \begin{verbatim}
-CC_FLAGS= -DLIKWID_PERFMON -g -I/opt/likwid/include -L/opt/likwid/lib -llikwid -fopenmp -O2
+CC_FLAGS= -DLIKWID_PERFMON -g -I/opt/likwid/include -L/opt/likwid/lib -llikwid -fopenmp -O2 
 \end{verbatim}
 
 \noindent GCC 7.3 was used as compiler:
@@ -179,7 +286,7 @@ We arrive at a realistic Ceiling as follows:
 
 Start with the theoretical peak performance: 1280 GFlops
 
-Take into account the lack of SIMD parallelism:
+Take into account the lack of SIMD parallelism: 
 $$\frac{1280 GFlops}{4} = 320 GFlops$$
 
 Take into account the imbalance of MUL vs ADD operations:
@@ -225,31 +332,6 @@ This being the inner loop which iterates over all points of the dataset:
 
 \subsection{Comparison and Discussion}
 
-\subsubsection{Empirical AI Data}
-
-Table \ref{tab:ai_tab} shows the recorded performance for kmeans on varius inputs.
-Table \ref{tab:ai_tab_marked} improved on this data by only recording data for the kernel of the application.
-
-When recording performance for the whole application we end up also recording parts of the program not relevant to roofline.
-So we record for example during IO (reading of the input file) and initialization (allocating buffers).
-
-As these tasks involve syscalls and possibly external hardware the are not suitable for analysis through the roofline model.
-We can improve on this by only recording information about the application kernel as presented in the second table.
-
-We can improve on our analysis even further by taking into consideration
-maximum performance for the given code as discussed in \autoref{lbl:maxPerf}.
-
-The maximum performance recorded for the marked region in a benchmark is 13GFLOPS.
-According to the roofline model this would require bandwith close to $$13 GFLOPS * 0,31 Flop/Byte = 4,03 GB/s$$
-However actual bandwith used for the benchmark is at $3,45 GB/s$.
-
-So the performance of our kernel seems limited by FP performance. But we are well below the ceiling there as well.
-
-This is likely due to reasons outside of FP performance
-like branch mispredics, control flow overhead, synchronisation overhead or others. Given that performance actually goes
-down when using 80 Threads compared to 10 it is an reasonable assumption that a lot of performance is lost in overhead
-caused by parallelization.
-
 
 \subsubsection{Maximum performance of the kmeans kernel}
 
@@ -274,7 +356,7 @@ The main loop itself can be further split into three distinct parts.
 		\item Find the nearest cluster(\texttt{find\_nearest\_point}).
 		\item Collect partial updates on the position of clusters.
 	\end{itemize}
-	\item Reduce partial information and update positions of clusters
+	\item Reduce partial information and update positions of clusters 	
 \end{itemize}
 
 For our analysis we assume 5 clusters and 34 features which matches
@@ -355,7 +437,7 @@ for (i=0; i<nclusters; i++) {
 
 The amount of iterations of the above loop is static in regards to the number of items we work on.
 It is given by $ iterations = clusters * threads * features$.
-In our case when using all cores of the Mars system we get:
+In our case when using all cores of the Mars system we get: 
 $$ iterations = 5 * 80  * 34 = 13600$$
 However this is neglible for nontrivial datasets so we exclude it from the AI caluclation.
 
@@ -372,14 +454,16 @@ for (i=0; i<nclusters; i++) {
 }
 \end{lstlisting}
 With this loop having at most iterations of:
-$$clusters * features = 5 * 34 = 170 = iterations$$
+$$clusters * features = 5 * 34 = 170 = iterations$$ 
 This loop has no significant impact on overall performance and can safely be ignored.
 
 \subsection{kmeans: Roofline Model}
 
 Table \ref{tab:AI} gives us the AI for the inner main loop based on it's two essential parts according to the roofline model.
 
-It is however important to point out this does assume NO caching. In practice much of the memory pressure might be absorbed by the cache.
+It is however important to point out this does assume NO caching. In practice most of the memory pressure will be absorbed by the cache.
+
+According to the roofline model this gives us a demand of $$\frac{1280GFlops}{0,31Flop/Byte} = 4129 Gb/s$$ on the memory system for 80 Threads.
 
 \begin{table}[ht]
 	\centering
@@ -461,7 +545,7 @@ Table~\ref{tab:related_algorithms} shows a summary of related algorithms.
 \captionabove{Related algorithms and their complexity.}
 \label{tab:related_algorithms}
 \begin{tabular}{ll}
-\toprule
+\toprule 
 algorithm & complexity \\
 \midrule
 algorithm Y & $O(n)$ \\

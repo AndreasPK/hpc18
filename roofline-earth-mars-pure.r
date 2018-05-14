@@ -1,26 +1,28 @@
-png("task-01_roofline-earth-mars.png", width = 1280, height = 640)
+png("roofline-earth-mars-pure.png", width = 1280, height = 640)
 
 pp_earth =  192.0 # peak performance ... [GFLOPS/s]
 pb_earth =    8.1 # peak bandwidth ... [GB/s]
-ai_earth = function(b) (pp_earth/pb_earth) * b
+#ai_earth = pp_earth/pb_earth
 
 pp_mars  = 1280.0 # peak performance ... [GFLOPS/s]
 pb_mars  =   30.5 # peak bandwidth ... [GB/s]
-ai_mars  = function(b) (pp_mars/pb_mars) * b
+#ai_mars  = pp_mars/pb_mars
 
-x = seq(1,8,1)
-x_at = 2^x
+ai = 2^seq(0, 8, 1)
+
+x_at = ai
 x_labels = x_at
 
-y = seq(4,12,1)
-y_at = 2^y
+y_at = 2^seq(4, 11, 1)
 y_labels = y_at
 
-plot(ai_earth, xlab = "Arithmetic Intensity [FLOPS/B]",
+plot(ai, pb_earth * ai, xlab = "Arithmetic Intensity [FLOPS/B]",
          xlim = c(x_at[1], x_at[length(x_at)]),
          ylab = "Performance [FLOPS/s]", 
          ylim = c(y_at[1], y_at[length(y_at)]),
      axes=FALSE, log = "xy", type = "l", col = "blue", lwd = 2)
+
+#plot(ai, pb_mars * ai, add = TRUE)
 
 axis(1, at = x_at, labels = x_labels, tick = TRUE)
 axis(2, at = y_at, labels = y_labels, tick = TRUE)
@@ -68,7 +70,7 @@ axis(2, at = y_at, labels = y_labels, tick = TRUE)
 #}
 
 
-segments(x_at[1], ai_mars(x_at[1]), x_at[length(x_at)], ai_mars(x_at[length(x_at)]),
+segments(x_at[1], pb_mars * ai[1], x_at[length(x_at)], pb_mars * ai[length(ai)],
          col = "red", lwd = 2)
 
 segments(x_at[1], pp_earth, x_at[length(x_at)], pp_earth,
@@ -77,9 +79,9 @@ segments(x_at[1], pp_earth, x_at[length(x_at)], pp_earth,
 segments(x_at[1], pp_mars, x_at[length(x_at)], pp_mars,
          col = "red", lwd = 2)
 
-text(24, 620, "bandwidth bound: earth", srt = 21, cex = 1.5)
-text(24, 220, "compute bound: earth", cex = 1.5)
-text(12, 620, "bandwidth bound: mars", srt = 21, cex = 1.5)
+text(60, 620, "bandwidth bound: earth", srt = 25, cex = 1.5)
+text(60, 220, "compute bound: earth", cex = 1.5)
+text(12, 460, "bandwidth bound: mars", srt = 25, cex = 1.5)
 text(12, 1500, "compute bound: mars", cex = 1.5)
 
 dev.off()

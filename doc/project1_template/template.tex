@@ -1,0 +1,75 @@
+
+% Template for Project Solutions
+% Research Group for Parallel Computing
+% Vienna University of Technology
+
+% Copyright (C) 2017
+% Sascha Hunold <hunold@par.tuwien.ac.at>
+% version 1.0.0
+
+\documentclass[DIV12,a4paper]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath}  
+\usepackage{amssymb} 
+\usepackage{microtype} 
+\usepackage{booktabs} 
+\usepackage{nag}       % Issues warnings when best practices in writing LaTeX documents are violated.
+\usepackage{hyperref}
+\usepackage{xspace}
+\usepackage{graphicx}
+\usepackage[square,numbers]{natbib}  % need this for DOI (or use biber/biblatex)
+\usepackage{listings}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ONLY CHANGE THE FOLLOWING MACROS
+
+% your name
+\newcommand{\studname}{Martina Musterfrau}
+
+% your email address
+\newcommand{\studemail}{mfrau@student.tuwien.ac.at}
+
+% your matrikel number
+\newcommand{\studmatrikel}{0123454321}
+
+% name of class
+\newcommand{\coursename}{High Performance Computing}
+%\newcommand{\coursename}{Advanced Multiprocessor Programming}
+%\newcommand{\coursename}{Parallel Algorithms}
+
+\newcommand{\coursesemester}{SS 2018}
+
+% title of your seminar paper
+\newcommand{\projectname}{Project 1}
+
+% date when you hand in 
+\newcommand{\projectdate}{XX May 2018}
+
+
+% YOU SHOULD NOT NEED TO CHANGE THE REMAINING FILE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\graphicspath{{graphics/}}
+
+\begin{document}
+
+\pagenumbering{Alph} % remove some hyperref warning
+\input{titlepage}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\pagestyle{plain}
+
+\setcounter{page}{1}
+
+\input{main}
+
+\cleardoublepage
+% bibliography if needed, comment out if not needed
+\bibliographystyle{plainnat}
+\bibliography{myreferences}
+
+\end{document}

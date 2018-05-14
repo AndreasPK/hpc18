@@ -81,15 +81,14 @@ Operations are two additions and one multiplication.
 \footnote{While there are two subtractions in the code gcc will eliminate one through common subexpression elimination.}
 \begin{itemize}[noitemsep,nolistsep]
 	\item Read: \texttt{pt1[j]}
-	\item Read: \texttt{pt2[j]}
-	\item (Ignored) Store of intermediate result
+	\item Read: \texttt{clusters[i][j]}
 \end{itemize}
 
 Immediatly obvious from the snippet above we get at least $nclusters * nfeatures$ iterations.
-With one call per iteration of the main loop this gives us:\\
+With one call to \texttt{find\_nearest\_point} for each point per iteration of the main loop this gives us:\\
 $$iterations = n * nclusters * nfeatures = n * 170$$
 
-Even for out smallest data sample this already gives us $17000$ iterations and will dominate the computational demands for any reasonably large size of n.
+Even for our smallest data sample which has 100 points this already gives us $17000$ iterations and will dominate the computational demands for any reasonably large size of n.
 
 If we stop here our Arithmethic Intensity is 3 FP operations per 8 byte. Giving an AI of $\frac{0,375 Ops}{Byte}$
 \footnote{Although in practice caches will usually hold both pt1 and the clusters}
@@ -100,14 +99,18 @@ If we stop here our Arithmethic Intensity is 3 FP operations per 8 byte. Giving 
 for (j=0; j<nfeatures; j++)
 	partial_new_centers[tid][index][j] += feature[i][j];
 \end{lstlisting}
-With $iterations = n * nfeatures = 34$ this loops is not as essential as finding the nearest cluster.
-However it still contributes a noteworthy amount of computational demands.
+This happens again for each point in the dataset for each iteration of the Main loop.
+This gives us for iterations:
+$$iterations = n * nfeatures = 34$$
+
+While this is not as big an contributor as the loop finding the nearest cluster
+it still contributes a noteworthy amount of computational demands.
 
 In particular for each iteration here we have two loads (8 Byte) and one addition.
-\footnote{Although it is fair to assume that  partial\_new\_centers[tid][index][j] will be cached.}
+\footnote{Although it is fair to assume that partial\_new\_centers[tid][index][j] will be cached.}
 
 
-\subsubsection{Reduction loop one}
+\subsubsection{Main Loop:Reduction loop one}
 \begin{lstlisting}[caption={Reduction pt1}]
 /* let the main thread perform the array reduction */
 for (i=0; i<nclusters; i++) {
@@ -140,7 +143,7 @@ Which however is neglible for nontrivial datasets so we don't include it in our 
 %For fp operations we get a single addition from:\\
 %\texttt{new\_centers[i][k] += partial\_new\_centers[j][i][k]}
 
-\subsubsection{Reduction loop two}
+\subsubsection{Main Loop:Reduction loop two}
 \begin{lstlisting}[caption={Reduction pt2}]
 /* replace old cluster centers with new_centers */
 for (i=0; i<nclusters; i++) {
@@ -158,6 +161,7 @@ For this reason we will ignore it.
 \subsection{kmeans: Roofline Model}
 
 Table \ref{tab:AI} gives us the AI for the inner main loop based on it's two essential parts according to the roofline model.
+
 It is however important to point out this does assume NO caching. In practice most of the memory pressure will be absorbed by the cache.
 
 According to the roofline model this gives us a demand of $$\frac{1280GFlops}{0,31Flop/Byte} = 4129 Gb/s$$ on the memory system for 80 Threads.
@@ -187,8 +191,10 @@ When considering the maximum performance of the given code there are multiple th
 
 This means performance is limited by the addition ALU primarily.
 
-The kernel in find\_nearest\_point is able to execute 1,5 Instructions per cycle instead of the maximum of 2.
-We could take into account the limiting factor in the smaller loop \autoref{lblUpdPartClst} which is limited purely by addition.
+In \texttt{find\_nearest\_point} we have two additions and one multiplication per result. This mean on average we will execute an addition every cycle and a multiplication every second.
+So we execute 1,5 Instructions per cycle instead of the maximum of 2 in this kernel because of the mul/add imbalance.
+
+We could additionally take into account the smaller loop \autoref{lblUpdPartClst} which is limited purely by addition.
 However this would bring down flops/cycle only slightly to 1,41 so for simplicity we will use 1.5 for further analysis.
 
 Maximum FP performance under these considerations is:
@@ -197,9 +203,9 @@ $$1280 GFlops * 0.25 \text{(no SIMD)}  * 0.75 \text{(imbalance)} = 240 GFlops$$.
 Which gives us for the demand on the memory subsystem for 80 Threads:
 $$\frac{240 GFlops}{0,31 Flop/Byte} = 774 GB/s$$
 
+And 10 Threads:
+$$\frac{30 GFlops}{0,31 Flop/Byte} = 96 GB/s$$
+
 However since many of the inputs to the kernel can be cached this is not representative of the actualy demands on the memory system as our measurements show.
-
-
-
 
 \end{document}

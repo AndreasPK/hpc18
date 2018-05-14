@@ -52,6 +52,16 @@
 
 \subsection{Roofline plots with realistic ceiling for kmeans kernel}
 
+We arrive at a realistic Ceiling as follows:
+
+Start with the theoretical peak performance: 1280 GFlops
+
+Take into account the lack of SIMD parallelism: 
+$$\frac{1280 GFlops}{4} = 320 GFlops$$
+
+Take into account the imbalance of MUL vs ADD operations:
+$$\frac{320 GFlops}{2 Flop/Cycle} *1.5 Flop/Cycle = 240 GFlops$$
+
 \subsection{Obtain AI for kmeans with the LIKWID marker API}
 
 \begin{table}[h]

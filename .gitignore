@@ -1,4 +1,10 @@
 *.aux
 doc/*.log
 *.out
+*.bbl
+*.blg
+*.log
+doc/project1_template/template.pdf
 *.synctex.gz
+.Rhistory
+*~

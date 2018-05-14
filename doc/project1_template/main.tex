@@ -86,21 +86,7 @@ $$\frac{320 GFlops}{2 Flop/Cycle} *1.5 Flop/Cycle = 240 GFlops$$
 \subsection{Comparison and Discussion}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Maximum performance of the kmeans kernel}
+\subsubsection{Maximum performance of the kmeans kernel}
 
 The kernel of the \texttt{kmeans} algoirthm is in the \texttt{kmeans\_clustering} function.
 
@@ -116,14 +102,11 @@ The function is split into three main parts:
 
 We can safely ignore initialization for our performance consideration which leaves the main loop.
 
-\newpage
-\subsection{The Main Loop}
-
-We can split the main loop again into three somewhat distinct parts.
+The main loop itself can be further split into three distinct parts.
 \begin{itemize}
-	\item In a parallel loop:
+	\item For each point:
 	\begin{itemize}
-		\item Find the nearest cluster for each point.
+		\item Find the nearest cluster(\texttt{find\_nearest\_point}).
 		\item Collect partial updates on the position of clusters.
 	\end{itemize}
 	\item Reduce partial information and update positions of clusters 	
@@ -132,53 +115,52 @@ We can split the main loop again into three somewhat distinct parts.
 For our analysis we assume 5 clusters and 34 features which matches
 the default of kmeans and our input datasets.
 
-The only significant contributors here are the loops to find the nearest cluster and updating the cluster information.
+The only significant contributors here in terms of computation are the loops to find the nearest cluster and updating the cluster information.
 For this reason we will look only at these inner loops and not at the rest of the main loop.
 
-
-\subsubsection{Main loop:Finding the nearest cluster}
+\paragraph{}
 \begin{lstlisting}[caption={Inlined representation of find\_nearest\_point}]
 for (i=0; i<nclusters; i++) {
-float dist=0;
-for (j=0; j<nfeatures; j++)
-dist += (pt1[j]-clusters[i][j]) * (pt1[j]-clusters[i][j]);
-if (dist < min_dist) {
-min_dist = dist;
-index    = i;
-}
+	float dist=0;
+	for (j=0; j<nfeatures; j++)
+		dist += (pt1[j]-clusters[i][j]) * (pt1[j]-clusters[i][j]);
+	if (dist < min_dist) {
+		min_dist = dist;
+		index    = i;
+	}
 }
 \end{lstlisting}
-The kernel here is: \texttt{dist += (pt1[j]-pt2[j]) * (pt1[j]-pt2[j])}.\newline
+The kernel here is:
+\texttt{dist += (pt1[j]-pt2[j]) * (pt1[j]-pt2[j])}.\newline
 
-We get 8
-\footnote{Actually 12. But we can ignore the store of dist as it will be held in a register.}
-byte of memory bandwith and three floating point operations.
-Memory bandwith consists of 2 loads for each iteration.
-Operations are two additions and one multiplication.
-\footnote{Treating subtraction as addition.}
-\footnote{While there are two subtractions in the code gcc will eliminate one through common subexpression elimination.}
+We get 8 byte of memory bandwith for three floating point operations.
+Memory bandwith consists of 2 loads for each iteration:
 \begin{itemize}
 	\item Read: \texttt{pt1[j]}
 	\item Read: \texttt{clusters[i][j]}
 \end{itemize}
+Operations are two additions and one multiplication.
+\footnote{Treating subtraction as addition.}
+\footnote{While there are two subtractions in the code gcc will eliminate one through common subexpression elimination.}
+
 
 Immediatly obvious from the snippet above we get at least $nclusters * nfeatures$ iterations.
 With one call to \texttt{find\_nearest\_point} for each point per iteration of the main loop this gives us:\\
-$$iterations = n * nclusters * nfeatures = n * 170$$
+$$iterations = n * \texttt{nclusters} * \texttt{nfeatures} = n * 170$$
 
 Even for our smallest data sample which has 100 points this already gives us $17000$ iterations and will dominate the computational demands for any reasonably large size of n.
 
 If we stop here our Arithmethic Intensity is 3 FP operations per 8 byte. Giving an AI of $\frac{0,375 Ops}{Byte}$
-\footnote{Although in practice caches will usually hold both pt1 and the clusters}
+\footnote{Although in practice caches will usually hold both pt1 and the clusters after the first run of the loop body.}
 
 
-\subsubsection{Main Loop:Updating cluster information.}
-%\begin{lstlisting}[caption={Updating (partial) cluster information},label=lblUpdPartClst]
-%for (j=0; j<nfeatures; j++)
-%partial_new_centers[tid][index][j] += feature[i][j];
-%\end{lstlisting}
-This happens again for each point in the dataset for each iteration of the Main loop.
-This gives us for iterations:
+\paragraph{}
+Also for each point we will update the partial cluster information:
+\begin{lstlisting}[caption={Updating (partial) cluster information},label=lblUpdPartClst]
+for (j=0; j<nfeatures; j++)
+partial_new_centers[tid][index][j] += feature[i][j];
+\end{lstlisting}
+We get for the number of iterations:
 $$iterations = n * nfeatures = 34$$
 
 While this is not as big an contributor as the loop finding the nearest cluster
@@ -187,54 +169,46 @@ it still contributes a noteworthy amount of computational demands.
 In particular for each iteration here we have two loads (8 Byte) and one addition.
 \footnote{Although it is fair to assume that partial\_new\_centers[tid][index][j] will be cached.}
 
+Past this what is left to do is the combination of partial cluster information and calculating the new clusters.
 
-\subsubsection{Main Loop:Reduction loop one}
-%\begin{lstlisting}[caption={Reduction pt1}]
-%/* let the main thread perform the array reduction */
-%for (i=0; i<nclusters; i++) {
-%for (j=0; j<nthreads; j++) {
-%new_centers_len[i] += partial_new_centers_len[j][i];
-%partial_new_centers_len[j][i] = 0.0;
-%for (k=0; k<nfeatures; k++) {
-%new_centers[i][k] += partial_new_centers[j][i][k];
-%partial_new_centers[j][i][k] = 0.0;
-%}
-%}
-%}
-%\end{lstlisting}
+\paragraph{} This happens in a fixed (relative to the number of points) number of iterations so no AI intensity calculation was done on this code.
 
-The amount of iterations is static in regards to the number of items we work on.
+
+\begin{lstlisting}[caption={Reduction pt1}]
+/* let the main thread perform the array reduction */
+for (i=0; i<nclusters; i++) {
+	for (j=0; j<nthreads; j++) {
+		new_centers_len[i] += partial_new_centers_len[j][i];
+		partial_new_centers_len[j][i] = 0.0;
+		for (k=0; k<nfeatures; k++) {
+			new_centers[i][k] += partial_new_centers[j][i][k];
+		partial_new_centers[j][i][k] = 0.0;
+		}
+	}
+}
+\end{lstlisting}
+
+The amount of iterations of the above loop is static in regards to the number of items we work on.
 It is given by $ iterations = clusters * threads * features$.
-In our case when using all cares we get $ iterations = 5 * 80  * 34 = 13600$.
-Which however is neglible for nontrivial datasets so we don't include it in our arithmetic intensity computation. 
+In our case when using all cores of the Mars system we get: 
+$$ iterations = 5 * 80  * 34 = 13600$$
+However this is neglible for nontrivial datasets so we exclude it from the AI caluclation.
 
-%Ignoring integer operations and caching completely we only have to consider the innermost loop for AI.
-%
-%This gives for memory bandwith 16 Bytes:
-%\begin{itemize}[noitemsep,nolistsep]
-%	\item Read \texttt{new\_centers}
-%	\item Read \texttt{partial\_new\_centers}
-%	\item Write \texttt{new\_centers}
-%	\item Write \texttt{partial\_new\_centers}
-%\end{itemize}
-%
-%For fp operations we get a single addition from:\\
-%\texttt{new\_centers[i][k] += partial\_new\_centers[j][i][k]}
-
-\subsubsection{Main Loop:Reduction loop two}
-%\begin{lstlisting}[caption={Reduction pt2}]
-%/* replace old cluster centers with new_centers */
-%for (i=0; i<nclusters; i++) {
-%for (j=0; j<nfeatures; j++) {
-%if (new_centers_len[i] > 0)
-%clusters[i][j] = new_centers[i][j] / new_centers_len[i];
-%new_centers[i][j] = 0.0;   /* set back to 0 */
-%}
-%new_centers_len[i] = 0;   /* set back to 0 */
-%}
-%\end{lstlisting}
-With at most $clusters * features = 5 * 34 = 170 = iterations$ this loop has no significant impact on overalls performance.
-For this reason we will ignore it.
+Similar we have the loop calculating the new clusters at the end of the main loop:
+\begin{lstlisting}[caption={Reduction pt2}]
+/* replace old cluster centers with new_centers */
+for (i=0; i<nclusters; i++) {
+	for (j=0; j<nfeatures; j++) {
+		if (new_centers_len[i] > 0)
+			clusters[i][j] = new_centers[i][j] / new_centers_len[i];
+		new_centers[i][j] = 0.0;   /* set back to 0 */
+	}
+	new_centers_len[i] = 0;   /* set back to 0 */
+}
+\end{lstlisting}
+With this loop having at most iterations of:
+$$clusters * features = 5 * 34 = 170 = iterations$$ 
+This loop has no significant impact on overall performance and can safely be ignored.
 
 \subsection{kmeans: Roofline Model}
 

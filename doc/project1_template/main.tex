@@ -18,12 +18,89 @@
 
 \subsection{Machine 2 / Mars}
 
+The mars system has:
+ \begin{itemize}
+ 	\item 8 Sockets with
+	\item an Intel Xeon E7-8850 @ 2.00 GHz
+	\item with 10 Cores each.
+\end{itemize}
+
+As such it is an 80 core NUMA shared memory system.
+
 \subsubsection{Theoretical Peak Performance}
+
+The Xeon E7-8850 is a Westermere-EX architecture based on Nehalem.\cite{wikichip}
+As such is has two discrete ALU's for addition and multiplication.
+Each ALU can process up to 4 SP Floats per cycle when using the appropriate SIMD instructions.\cite{agnerorg}
+
+This results in a peak performance for the whole mars system of:
+$$\text{Throughput} = 4 \text{SPF} * 2 \text{(ALUs)} * 2 Ghz * 80 = 1280 \, GFLOPs$$
 
 \subsubsection{STREAM or NUMA-STREAM}
 
+We measured the maximal bandwith using the NUMA-STREAM benchmark.
+The maximum Bandwith measured was 30.5GB/s
+
+\begin{center}
+\begin{tabular}{|r|r|}
+	\hline
+	Function & MB/s    \\ \hline
+	Copy     & $30344$ \\ \hline
+	Scale    & $30521$ \\ \hline
+	Add      & $30126$ \\ \hline
+	Triad    & $30260$ \\ \hline
+\end{tabular}
+\end{center}
+
 \subsubsection{Roofline Plot}
 
+\begin{figure}[]
+	\centering
+	\includegraphics[width=.5\linewidth]{figures/placeholder}
+	\caption{Calculated roofline model for mars}
+	\label{fig:runtime}
+\end{figure}
+
+\newpage
+\subsubsection{Compilation Details \& Output}
+
+\begin{center}
+\begin{lstlisting}[basicstyle=\tiny]
+gcc -O3 -std=c99 stream.c -lnuma -fopenmp -DN=80000000 -DNTIMES=100 -o stream-gcc
+.\stream-gcc
+-------------------------------------------------------------
+STREAM version $Revision: 5.9 $
+-------------------------------------------------------------
+This system uses 8 bytes per DOUBLE PRECISION word.
+-------------------------------------------------------------
+Array size = 80000000
+Total memory required = 1831.1 MB.
+Each test is run 100 times, but only
+the *best* time for each is used.
+-------------------------------------------------------------
+Number of Threads requested = 80
+Number of available nodes = 8
+-------------------------------------------------------------
+Your clock granularity/precision appears to be 1 microseconds.
+Each test below will take on the order of 20711 microseconds.
+(= 20711 clock ticks)
+Increase the size of the arrays if this shows that
+you are not getting at least 20 clock ticks per test.
+-------------------------------------------------------------
+WARNING -- The above is only a rough guideline.
+For best results, please be sure you know the
+precision of your system timer.
+-------------------------------------------------------------
+Function      Rate (MB/s)   Avg time     Min time     Max time
+Copy:       30344.0333       0.0429       0.0422       0.0441
+Scale:      30521.8913       0.0424       0.0419       0.0440
+Add:        30126.6472       0.0645       0.0637       0.0656
+Triad:      30260.5691       0.0643       0.0634       0.0660
+-------------------------------------------------------------
+Solution Validates
+-------------------------------------------------------------
+\end{lstlisting}
+\end{center}
 
 \section{Performance of kmeans Kernel}
 

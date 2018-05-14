@@ -240,8 +240,8 @@ We can improve on our analysis even further by taking into consideration
 maximum performance for the given code as discussed in \autoref{lbl:maxPerf}.
 
 The maximum performance recorded for the marked region in a benchmark is 13GFLOPS.
-According to the roofline model this would require bandwith close to $$13 GFLOPS * 0,31Flop/Byte = 3,4GB/s$$
-However actual bandwith used for the benchmark is at 3,45B/S.
+According to the roofline model this would require bandwith close to $$13 GFLOPS * 0,31 Flop/Byte = 4,03 GB/s$$
+However actual bandwith used for the benchmark is at $3,45 GB/s$.
 
 So the performance of our kernel seems limited by FP performance. But we are well below the ceiling there as well.
 
@@ -380,7 +380,7 @@ Table \ref{tab:AI} gives us the AI for the inner main loop based on it's two ess
 According to the roofline model this gives us a demand of $$ 1280GFlops * 0,31Flop/Byte = 396,8 Gb/s$$ on the memory system for 80 Threads if
 we want to reach the FP Performance Ceiling.
 
-It is however important to point out this does assume NO caching. In practice much of the memory pressure will be absorbed by the cache.
+It is however important to point out this does assume NO caching. In practice much of the memory pressure might be absorbed by the cache.
 
 \begin{table}[ht]
 	\centering

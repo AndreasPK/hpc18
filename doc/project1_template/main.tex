@@ -88,7 +88,7 @@
 
 \subsubsection{Roofline Plot}
 %TODO
-%\includegraphics[scale=0.4, angle=90]{roofline-earth-mars-pure.png}
+\includegraphics[scale=0.4, angle=90]{roofline-earth-mars-pure.png}
 
 
 \subsection{Machine 2 / Mars}
@@ -241,7 +241,8 @@ We measured the AI of kmeans using likwid. The following schema was used for all
 
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=.5\linewidth]{figures/runtime}
+	\includegraphics[width=.5\linewidth]{figures/runtime/roofline-mars-10tall.png}
+	\includegraphics[width=.5\linewidth]{figures/runtime/roofline-mars-80tall.png}
 	\caption{Roofline for complete kmeans application}
 	\label{fig:runtime}
 \end{figure}
@@ -290,7 +291,8 @@ This being the inner loop which iterates over all points of the dataset:
 
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=.5\linewidth]{figures/runtime}
+	\includegraphics[width=.5\linewidth]{figures/runtime/roofline-mars-10tmarked.png}
+	\includegraphics[width=.5\linewidth]{figures/runtime/roofline-mars-80tmarked.png}
 	\caption{Roofline including realistic ceilings for Mars}
 	\label{fig:runtimex}
 \end{figure}

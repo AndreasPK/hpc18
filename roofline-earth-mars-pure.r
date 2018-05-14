@@ -1,7 +1,7 @@
 png("roofline-earth-mars-pure.png", width = 1280, height = 640)
 
 pp_earth =  42.72 # peak performance ... [GFLOPS/s]
-pb_earth =   12.1 # peak bandwidth ... [GB/s]
+pb_earth =   12.2 # peak bandwidth ... [GB/s]
 #ai_earth = pp_earth/pb_earth
 
 pp_mars  = 1280.0 # peak performance ... [GFLOPS/s]
@@ -79,8 +79,8 @@ segments(x_at[1], pp_earth, x_at[length(x_at)], pp_earth,
 segments(x_at[1], pp_mars, x_at[length(x_at)], pp_mars,
          col = "red", lwd = 2)
 
-text(60, 620, "bandwidth bound: earth", srt = 25, cex = 1.5)
-text(60, 50, "compute bound: earth", cex = 1.5)
+text(40, 620, "bandwidth bound: earth", srt = 25, cex = 1.5)
+text(40, 50, "compute bound: earth", cex = 1.5)
 text(12, 460, "bandwidth bound: mars", srt = 25, cex = 1.5)
 text(12, 1500, "compute bound: mars", cex = 1.5)
 

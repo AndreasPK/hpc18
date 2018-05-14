@@ -1,0 +1,31 @@
+-------------------------------------------------------------
+STREAM version $Revision: 5.9 $
+-------------------------------------------------------------
+This system uses 8 bytes per DOUBLE PRECISION word.
+-------------------------------------------------------------
+Array size = 80000000
+Total memory required = 1831.1 MB.
+Each test is run 1000 times, but only
+the *best* time for each is used.
+-------------------------------------------------------------
+Number of Threads requested = 20
+Number of available nodes = 8
+-------------------------------------------------------------
+Your clock granularity/precision appears to be 1 microseconds.
+Each test below will take on the order of 19662 microseconds.
+   (= 19662 clock ticks)
+Increase the size of the arrays if this shows that
+you are not getting at least 20 clock ticks per test.
+-------------------------------------------------------------
+WARNING -- The above is only a rough guideline.
+For best results, please be sure you know the
+precision of your system timer.
+-------------------------------------------------------------
+Function      Rate (MB/s)   Avg time     Min time     Max time
+Copy:       34465.1742       0.0381       0.0371       0.0469
+Scale:      34475.3549       0.0381       0.0371       0.0487
+Add:        34836.2613       0.0566       0.0551       0.0700
+Triad:      34829.9332       0.0565       0.0551       0.0711
+-------------------------------------------------------------
+Solution Validates
+-------------------------------------------------------------

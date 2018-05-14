@@ -5,7 +5,7 @@
 	language=C
 }
 
-\ttfamily\small
+
 
 \section{Obtaining a Roofline Model}
 
@@ -149,7 +149,7 @@ We measured the AI of kmeans using likwid. The following schema was used for all
 \begin{small}
 \begin{tabular}{lllll}
 \toprule
-\#cores & file & Total GFLOPS & Total GBytes & AI (FLOPS/Byte) \\
+\#cores & file & Total MFLOPS & Total MBytes & AI (FLOPS/Byte) \\
 \midrule
 10 & 100 & 1.33 & 73.44 & 0.02 \\
 10 & 204800.txt & 1517.92 & 476.26 & 3.19 \\
@@ -193,11 +193,11 @@ This being the inner loop which iterates over all points of the dataset:
 
 \begin{table}[h]
 \centering
-\caption{\label{tab:ai_tab}Overview of AIs obtained for kmeans on Mars}
+\caption{\label{tab:ai_tab_marked}Overview of AIs obtained for kmeans on Mars for marked region.}
 \begin{small}
 \begin{tabular}{lllll}
 \toprule
-\#cores & file & Total GFLOPS & Total GBytes & AI (FLOPS/Byte) \\
+\#cores & file & Total MFLOPS & Total MBytes & AI (FLOPS/Byte) \\
 \midrule
 10 & 100 & 385.08 & 150.01 & 2.57 \\
 10 & 204800.txt & 12738.94 & 2248.92 & 5.66 \\
@@ -225,8 +225,34 @@ This being the inner loop which iterates over all points of the dataset:
 
 \subsection{Comparison and Discussion}
 
+\subsubsection{Empirical AI Data}
+
+Table \ref{tab:ai_tab} shows the recorded performance for kmeans on varius inputs.
+Table \ref{tab:ai_tab_marked} improved on this data by only recording data for the kernel of the application.
+
+When recording performance for the whole application we end up also recording parts of the program not relevant to roofline.
+So we record for example during IO (reading of the input file) and initialization (allocating buffers).
+
+As these tasks involve syscalls and possibly external hardware the are not suitable for analysis through the roofline model.
+We can improve on this by only recording information about the application kernel as presented in the second table.
+
+We can improve on our analysis even further by taking into consideration
+maximum performance for the given code as discussed in \autoref{lbl:maxPerf}.
+
+The maximum performance recorded for the marked region in a benchmark is 13GFLOPS.
+According to the roofline model this would require bandwith close to $$13 GFLOPS * 0,31Flop/Byte = 3,4GB/s$$
+However actual bandwith used for the benchmark is at 3,45B/S.
+
+So the performance of our kernel seems limited by FP performance. But we are well below the ceiling there as well.
+
+This is likely due to reasons outside of FP performance 
+like branch mispredics, control flow overhead, synchronisation overhead or others. Given that performance actually goes
+down when using 80 Threads compared to 10 it is an reasonable assumption that a lot of performance is lost in overhead
+caused by parallelization.
+
 
 \subsubsection{Maximum performance of the kmeans kernel}
+\label{lbl:maxPerf}
 
 The kernel of the \texttt{kmeans} algoirthm is in the \texttt{kmeans\_clustering} function.
 
@@ -258,7 +284,7 @@ the default of kmeans and our input datasets.
 The only significant contributors here in terms of computation are the loops to find the nearest cluster and updating the cluster information.
 For this reason we will look only at these inner loops and not at the rest of the main loop.
 
-\paragraph{}
+\paragraph{Maximum Performance: The Parts}
 \begin{lstlisting}[caption={Inlined representation of find\_nearest\_point}]
 for (i=0; i<nclusters; i++) {
 	float dist=0;
@@ -283,9 +309,8 @@ Operations are two additions and one multiplication.
 \footnote{Treating subtraction as addition.}
 \footnote{While there are two subtractions in the code gcc will eliminate one through common subexpression elimination.}
 
-
-Immediatly obvious from the snippet above we get at least $nclusters * nfeatures$ iterations.
-With one call to \texttt{find\_nearest\_point} for each point per iteration of the main loop this gives us:\\
+Immediatly obvious from the snippet above we get $nclusters * nfeatures$ iterations.
+With one call to \texttt{find\_nearest\_point} for each data point per iteration of the main loop this gives us:\\
 $$iterations = n * \texttt{nclusters} * \texttt{nfeatures} = n * 170$$
 
 Even for our smallest data sample which has 100 points this already gives us $17000$ iterations and will dominate the computational demands for any reasonably large size of n.
@@ -294,7 +319,6 @@ If we stop here our Arithmethic Intensity is 3 FP operations per 8 byte. Giving 
 \footnote{Although in practice caches will usually hold both pt1 and the clusters after the first run of the loop body.}
 
 
-\paragraph{}
 Also for each point we will update the partial cluster information:
 \begin{lstlisting}[caption={Updating (partial) cluster information},label=lblUpdPartClst]
 for (j=0; j<nfeatures; j++)
@@ -304,9 +328,9 @@ We get for the number of iterations:
 $$iterations = n * nfeatures = 34$$
 
 While this is not as big an contributor as the loop finding the nearest cluster
-it still contributes a noteworthy amount of computational demands.
+it still contributes a noteworthy amount of computational demands so we will include it in the AI calculation.
 
-In particular for each iteration here we have two loads (8 Byte) and one addition.
+This loop causes for each iteration two loads (8 Byte) and one addition.
 \footnote{Although it is fair to assume that partial\_new\_centers[tid][index][j] will be cached.}
 
 Past this what is left to do is the combination of partial cluster information and calculating the new clusters.
@@ -350,13 +374,13 @@ With this loop having at most iterations of:
 $$clusters * features = 5 * 34 = 170 = iterations$$ 
 This loop has no significant impact on overall performance and can safely be ignored.
 
-\subsection{kmeans: Roofline Model}
+\paragraph{Maximum Performance}
 
 Table \ref{tab:AI} gives us the AI for the inner main loop based on it's two essential parts according to the roofline model.
+According to the roofline model this gives us a demand of $$ 1280GFlops * 0,31Flop/Byte = 396,8 Gb/s$$ on the memory system for 80 Threads if
+we want to reach the FP Performance Ceiling.
 
-It is however important to point out this does assume NO caching. In practice most of the memory pressure will be absorbed by the cache.
-
-According to the roofline model this gives us a demand of $$\frac{1280GFlops}{0,31Flop/Byte} = 4129 Gb/s$$ on the memory system for 80 Threads.
+It is however important to point out this does assume NO caching. In practice much of the memory pressure will be absorbed by the cache.
 
 \begin{table}[ht]
 	\centering
@@ -372,79 +396,31 @@ According to the roofline model this gives us a demand of $$\frac{1280GFlops}{0,
 	\end{tabular}
 \end{table}
 
-\subsection{kmeans: Maximum Performance}
-
-When considering the maximum performance of the given code there are multiple things to consider:
+When considering the maximum realistic performance of the given code there are multiple things to consider:
 
 \begin{itemize}
 	\item The kernel does not use SIMD instructions. This immediatly brings down maximum performance by a factor of 4!
 	\item The kernel is not balanced. There is actually only a single relevant multiplication in the inner loop! Which can happen in parallel to the additions.
 \end{itemize}
 
-This means performance is limited by the addition ALU primarily.
-
 In \texttt{find\_nearest\_point} we have two additions and one multiplication per result. This mean on average we will execute an addition every cycle and a multiplication every second.
 So we execute 1,5 Instructions per cycle instead of the maximum of 2 in this kernel because of the mul/add imbalance.
 
 We could additionally take into account the smaller loop \autoref{lblUpdPartClst} which is limited purely by addition.
-However this would bring down flops/cycle only slightly to 1,41 so for simplicity we will use 1.5 for further analysis.
+However this would bring down flops/cycle only slightly so we will keep using 1.5Flops/Cycle for further analysis.
 
 Maximum FP performance under these considerations is:
 $$1280 GFlops * 0.25 \text{(no SIMD)}  * 0.75 \text{(imbalance)} = 240 GFlops$$.
 
 Which gives us for the demand on the memory subsystem for 80 Threads:
-$$\frac{240 GFlops}{0,31 Flop/Byte} = 774 GB/s$$
+$${240 GFlops}*{0,31 Flop/Byte} = 74,4 GB/s$$
 
 And 10 Threads:
-$$\frac{30 GFlops}{0,31 Flop/Byte} = 96 GB/s$$
+$${30 GFlops}*{0,31 Flop/Byte} = 18,6 GB/s$$
 
-However since many of the inputs to the kernel can be cached this is not representative of the actualy demands on the memory system as our measurements show.
-
-
+According to our bandwith measurements this means we will be computation bound on 10 cores and bandwith bound on 80 cores.
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-%%%%%%%%%% DELETE IF NOT NEEDED %%%%%%%%%
-\newpage
-
-Here are templates how to insert a table or a figure into your report.
-
-The run-time of our algorithm is shown in Figure~\ref{fig:runtime}.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=.5\linewidth]{figures/runtime}
-\caption{Run-time of algorithm X on machine Y.}
-\label{fig:runtime}
-\end{figure}
-
-
-Table~\ref{tab:related_algorithms} shows a summary of related algorithms.
-
-\begin{table}[ht]
-\centering
-\captionabove{Related algorithms and their complexity.}
-\label{tab:related_algorithms}
-\begin{tabular}{ll}
-\toprule 
-algorithm & complexity \\
-\midrule
-algorithm Y & $O(n)$ \\
-algorithm Z & $O(n \log{n} )$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-We can cite a nice book of Pinedo~\cite{Pinedo:2008vs} if we want to.

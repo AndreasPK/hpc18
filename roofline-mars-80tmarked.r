@@ -2,17 +2,17 @@ png("roofline-mars-80tmarked.png", width = 1280, height = 640)
 
 pp = 1280.0  # peak performance ... [GFLOPS/s]
 pb =   30.5 # peak bandwidth ... [GB/s]
-ai = function(b) (pp/pb) * b
 
-x = seq(-2,5,1)
-x_at = 2^x
+ai = 2^seq(-2, 4, 1)
+
+x_at = ai
 x_labels = x_at
 
 y = seq(-2,11,1)
 y_at = 2^y
 y_labels = y_at
 
-plot(ai, xlab = "Arithmetic Intensity [FLOPS/B]",
+plot(ai, ai * pb, xlab = "Arithmetic Intensity [FLOPS/B]",
          xlim = c(x_at[1], x_at[length(x_at)]),
          ylab = "Performance [GFLOPS/s]", 
          ylim = c(y_at[1], y_at[length(y_at)]),

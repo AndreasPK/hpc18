@@ -1,7 +1,7 @@
 png("roofline-earth-mars-pure.png", width = 1280, height = 640)
 
-pp_earth =  192.0 # peak performance ... [GFLOPS/s]
-pb_earth =    8.1 # peak bandwidth ... [GB/s]
+pp_earth =  42.72 # peak performance ... [GFLOPS/s]
+pb_earth =   12.1 # peak bandwidth ... [GB/s]
 #ai_earth = pp_earth/pb_earth
 
 pp_mars  = 1280.0 # peak performance ... [GFLOPS/s]
@@ -18,7 +18,7 @@ y_labels = y_at
 
 plot(ai, pb_earth * ai, xlab = "Arithmetic Intensity [FLOPS/B]",
          xlim = c(x_at[1], x_at[length(x_at)]),
-         ylab = "Performance [FLOPS/s]", 
+         ylab = "Performance [GFLOPS/s]", 
          ylim = c(y_at[1], y_at[length(y_at)]),
      axes=FALSE, log = "xy", type = "l", col = "blue", lwd = 2)
 
@@ -80,7 +80,7 @@ segments(x_at[1], pp_mars, x_at[length(x_at)], pp_mars,
          col = "red", lwd = 2)
 
 text(60, 620, "bandwidth bound: earth", srt = 25, cex = 1.5)
-text(60, 220, "compute bound: earth", cex = 1.5)
+text(60, 50, "compute bound: earth", cex = 1.5)
 text(12, 460, "bandwidth bound: mars", srt = 25, cex = 1.5)
 text(12, 1500, "compute bound: mars", cex = 1.5)
 
